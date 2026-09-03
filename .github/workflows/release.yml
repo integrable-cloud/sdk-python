@@ -9,7 +9,11 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: read
+  # `write`, not `read`: the release-notes step creates a GitHub Release,
+  # which needs it. With `read` the publish still succeeds and only the
+  # notes step fails - a red run for a release that actually shipped, which
+  # is the most misleading way for this workflow to fail.
+  contents: write
   # For PyPI Trusted Publishing over OIDC, once it is configured. Harmless
   # until then.
   id-token: write
