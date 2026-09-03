@@ -1,0 +1,71 @@
+name: Release
+
+# Tag-triggered, never on a push to main. A merge should not be able to
+# publish: releasing is a decision, and the tag is where that decision is
+# recorded. On PyPI it is also irreversible — a version number, once used,
+# can be yanked but never reused.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  # For PyPI Trusted Publishing over OIDC, once it is configured. Harmless
+  # until then.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -e ".[dev]" build twine
+
+      # The full gate again, on the exact commit being published. CI having
+      # passed on the branch is not the same as it passing on the tag.
+      - run: ruff check src tests
+      - run: mypy src
+      - run: pytest -q
+
+      # The tag is the source of truth for the version and the package must
+      # agree. A mismatch means the tag says one thing and PyPI another,
+      # forever — cheap to check, impossible to undo.
+      - name: Tag matches the package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::tag v$TAG does not match pyproject.toml $PKG"
+            exit 1
+          fi
+          echo "Publishing $PKG"
+
+      - run: python -m build
+      - run: twine check dist/*
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: twine upload dist/*
+
+      # Once a trusted publisher is configured on pypi.org for this repo,
+      # replace the step above with:
+      #
+      #   - uses: pypa/gh-action-pypi-publish@release/v1
+      #
+      # OIDC then mints a short-lived credential per run and PYPI_TOKEN can be
+      # deleted from the repository secrets entirely.
+
+      - name: Release notes
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

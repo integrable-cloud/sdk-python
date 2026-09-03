@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is the floor `requires-python` promises, so it is tested rather
+        # than assumed. Every release since, up to the current one.
+        python: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - run: pip install -e ".[dev]"
+
+      - run: ruff check src tests
+      - run: ruff format --check src tests
+      - run: mypy src
+      - run: pytest -q
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install build twine
+      - run: python -m build
+
+      # `twine check` catches the metadata problems PyPI rejects *after* you
+      # have burned the version number — a malformed README renders as a wall
+      # of raw markup on the project page and cannot be fixed without a new
+      # release.
+      - run: twine check dist/*
+
+      # A wheel that builds but cannot be imported is a wheel that fails on
+      # somebody else's machine, so it is installed from the artefact rather
+      # than from the source tree.
+      - name: The built wheel imports
+        run: |
+          pip install dist/*.whl
+          python -c "
+          import integrable_cloud as ic
+          assert hasattr(ic, 'Integrable') and hasattr(ic, 'AsyncIntegrable')
+          print('import ok', ic.__version__)
+          "
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
