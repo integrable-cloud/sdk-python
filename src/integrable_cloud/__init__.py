@@ -3,8 +3,8 @@
     from integrable_cloud import Integrable
 
     client = Integrable(api_key=os.environ["INTEGRABLE_API_KEY"])
-    for bot in client.bots.walk():
-        print(bot["id"], bot["name"])
+    for agent in client.agents.walk():
+        print(agent["id"], agent["name"])
 
 Sync and async clients share one implementation of the retry policy, the
 idempotency rule and the error mapping, so the two cannot drift.

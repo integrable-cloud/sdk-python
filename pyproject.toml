@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "integrable-cloud"
-version = "0.1.0"
-description = "Official Python SDK for the Integrable Cloud API - website chat assistants, conversations, knowledge bases and analytics."
+version = "0.2.0"
+description = "Official Python SDK for the Integrable Cloud API - website chat agents, conversations, knowledge bases and analytics."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

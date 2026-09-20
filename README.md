@@ -1,6 +1,6 @@
 # integrable-cloud
 
-Official Python SDK for the [Integrable Cloud](https://integrable.cloud) API — website chat assistants, conversations, knowledge bases and analytics.
+Official Python SDK for the [Integrable Cloud](https://integrable.cloud) API — website chat agents, conversations, knowledge bases and analytics.
 
 ```bash
 pip install integrable-cloud
@@ -16,8 +16,8 @@ from integrable_cloud import Integrable
 
 client = Integrable(api_key=os.environ["INTEGRABLE_API_KEY"])
 
-for bot in client.bots.walk():
-    print(bot["id"], bot["name"], bot["status"])
+for agent in client.agents.walk():
+    print(agent["id"], agent["name"], agent["status"])
 ```
 
 Create a key in the dashboard under **Settings → API keys**. It starts with `sk_live_` and is shown once.
@@ -30,9 +30,9 @@ The same surface, awaited:
 from integrable_cloud import AsyncIntegrable
 
 async with AsyncIntegrable(api_key=...) as client:
-    page = await client.bots.list()
+    page = await client.agents.list()
 
-    async for conversation in client.conversations.walk(bot_id, days=30):
+    async for conversation in client.conversations.walk(agent_id, days=30):
         await sync_to_crm(conversation)
 ```
 
@@ -42,11 +42,11 @@ Both clients share one implementation of the retry policy, the idempotency rule 
 
 **Retries safely.** Transient failures — 429, 5xx, connection resets — are retried with jittered exponential backoff. A `Retry-After` header always wins over the backoff curve, because the server knows when the window resets and the client is guessing.
 
-**Idempotency keys, automatically.** Every mutating request carries one, and a retry reuses the *same* key — so a create that timed out and was retried produces one bot rather than three:
+**Idempotency keys, automatically.** Every mutating request carries one, and a retry reuses the *same* key — so a create that timed out and was retried produces one agent rather than three:
 
 ```python
-client.bots.create(name="Support", system_prompt="...")   # key generated for you
-client.post("/api/bots", json=body, idempotency_key=my_stable_id)  # or supply one
+client.agents.create(name="Support", system_prompt="...")   # key generated for you
+client.post("/api/agents", json=body, idempotency_key=my_stable_id)  # or supply one
 ```
 
 A mutating request without a key is never retried: "did that land?" is exactly the question retrying cannot answer safely.
@@ -54,7 +54,7 @@ A mutating request without a key is never retried: "did that land?" is exactly t
 **Pagination that stays fast.**
 
 ```python
-for conversation in client.conversations.walk(bot_id, days=30):
+for conversation in client.conversations.walk(agent_id, days=30):
     process(conversation)
 ```
 
@@ -66,7 +66,7 @@ Follows the cursor lazily. Never increment a page number against this API — of
 from integrable_cloud import QuotaExceededError, RateLimitError, ValidationError
 
 try:
-    client.knowledge.add_text(bot_id, "Hours", "Open 9-5, Mon-Fri.")
+    client.knowledge.add_text(agent_id, "Hours", "Open 9-5, Mon-Fri.")
 except QuotaExceededError as e:
     print("Plan limit reached:", e.details)
 except ValidationError as e:
@@ -80,7 +80,7 @@ Every error carries `.request_id` — quote it at support and the exact call can
 **Rate-limit visibility.**
 
 ```python
-client.bots.list()
+client.agents.list()
 print(client.rate_limit)   # RateLimit(limit=120, remaining=118, reset=41)
 ```
 
@@ -102,7 +102,7 @@ client = Integrable(
 The typed resources cover the common calls. All 149 endpoints are reachable directly:
 
 ```python
-response = client.get(f"/api/bots/{bot_id}/contacts", query={"limit": 50})
+response = client.get(f"/api/agents/{agent_id}/contacts", query={"limit": 50})
 print(response.data["items"])
 print(response.api_version, response.request_id)
 ```

@@ -3,15 +3,15 @@
     from integrable_cloud import Integrable
 
     client = Integrable(api_key=os.environ["INTEGRABLE_API_KEY"])
-    for bot in client.bots.walk():
-        print(bot["id"], bot["name"])
+    for agent in client.agents.walk():
+        print(agent["id"], agent["name"])
 
 The async client is the same surface with ``await`` and ``async for``:
 
     from integrable_cloud import AsyncIntegrable
 
     async with AsyncIntegrable(api_key=...) as client:
-        page = await client.bots.list()
+        page = await client.agents.list()
 
 Both share `_Core`, so the retry policy, the idempotency rule and the error
 mapping are written once and cannot diverge between them.
@@ -67,7 +67,7 @@ class Integrable:
         self._http = http_client or httpx.Client(timeout=timeout)
         self._owns_http = http_client is None
 
-        self.bots = _Bots(self)
+        self.agents = _Agents(self)
         self.conversations = _Conversations(self)
         self.knowledge = _Knowledge(self)
         self.analytics = _Analytics(self)
@@ -183,7 +183,7 @@ class AsyncIntegrable:
         self._http = http_client or httpx.AsyncClient(timeout=timeout)
         self._owns_http = http_client is None
 
-        self.bots = _AsyncBots(self)
+        self.agents = _AsyncAgents(self)
         self.conversations = _AsyncConversations(self)
         self.knowledge = _AsyncKnowledge(self)
         self.analytics = _AsyncAnalytics(self)
@@ -278,50 +278,50 @@ class AsyncIntegrable:
 # everyone to remember a URL template and a discriminator field.
 
 
-class _Bots:
+class _Agents:
     def __init__(self, client: Integrable) -> None:
         self._c = client
 
     def list(self, **query: Any) -> dict[str, Any]:
-        return cast("dict[str, Any]", self._c.get("/api/bots", query=query).data)
+        return cast("dict[str, Any]", self._c.get("/api/agents", query=query).data)
 
     def walk(self, **query: Any) -> Iterator[dict[str, Any]]:
-        return self._c.paginate("/api/bots", query)
+        return self._c.paginate("/api/agents", query)
 
-    def get(self, bot_id: str) -> dict[str, Any]:
-        return cast("dict[str, Any]", self._c.get(f"/api/bots/{bot_id}").data)
+    def get(self, agent_id: str) -> dict[str, Any]:
+        return cast("dict[str, Any]", self._c.get(f"/api/agents/{agent_id}").data)
 
     def create(self, **body: Any) -> dict[str, Any]:
-        return cast("dict[str, Any]", self._c.post("/api/bots", json=body).data)
+        return cast("dict[str, Any]", self._c.post("/api/agents", json=body).data)
 
-    def update(self, bot_id: str, **body: Any) -> dict[str, Any]:
-        return cast("dict[str, Any]", self._c.patch(f"/api/bots/{bot_id}", json=body).data)
+    def update(self, agent_id: str, **body: Any) -> dict[str, Any]:
+        return cast("dict[str, Any]", self._c.patch(f"/api/agents/{agent_id}", json=body).data)
 
-    def delete(self, bot_id: str) -> None:
-        self._c.delete(f"/api/bots/{bot_id}")
+    def delete(self, agent_id: str) -> None:
+        self._c.delete(f"/api/agents/{agent_id}")
 
-    def embed(self, bot_id: str) -> dict[str, Any]:
+    def embed(self, agent_id: str) -> dict[str, Any]:
         """The embed snippet to paste into a site, with its integrity hash."""
-        return cast("dict[str, Any]", self._c.get(f"/api/bots/{bot_id}/embed").data)
+        return cast("dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/embed").data)
 
 
 class _Conversations:
     def __init__(self, client: Integrable) -> None:
         self._c = client
 
-    def list(self, bot_id: str, **query: Any) -> dict[str, Any]:
+    def list(self, agent_id: str, **query: Any) -> dict[str, Any]:
         return cast(
-            "dict[str, Any]", self._c.get(f"/api/bots/{bot_id}/conversations", query=query).data
+            "dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/conversations", query=query).data
         )
 
-    def walk(self, bot_id: str, **query: Any) -> Iterator[dict[str, Any]]:
+    def walk(self, agent_id: str, **query: Any) -> Iterator[dict[str, Any]]:
         """Every matching conversation. The one to use for an export or a sync."""
-        return self._c.paginate(f"/api/bots/{bot_id}/conversations", query)
+        return self._c.paginate(f"/api/agents/{agent_id}/conversations", query)
 
-    def get(self, bot_id: str, conversation_id: str) -> dict[str, Any]:
+    def get(self, agent_id: str, conversation_id: str) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            self._c.get(f"/api/bots/{bot_id}/conversations/{conversation_id}").data,
+            self._c.get(f"/api/agents/{agent_id}/conversations/{conversation_id}").data,
         )
 
 
@@ -329,51 +329,51 @@ class _Knowledge:
     def __init__(self, client: Integrable) -> None:
         self._c = client
 
-    def list(self, bot_id: str, **query: Any) -> dict[str, Any]:
+    def list(self, agent_id: str, **query: Any) -> dict[str, Any]:
         return cast(
-            "dict[str, Any]", self._c.get(f"/api/bots/{bot_id}/knowledge", query=query).data
+            "dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/knowledge", query=query).data
         )
 
-    def walk(self, bot_id: str, **query: Any) -> Iterator[dict[str, Any]]:
-        return self._c.paginate(f"/api/bots/{bot_id}/knowledge", query)
+    def walk(self, agent_id: str, **query: Any) -> Iterator[dict[str, Any]]:
+        return self._c.paginate(f"/api/agents/{agent_id}/knowledge", query)
 
-    def create(self, bot_id: str, **body: Any) -> dict[str, Any]:
+    def create(self, agent_id: str, **body: Any) -> dict[str, Any]:
         return cast(
-            "dict[str, Any]", self._c.post(f"/api/bots/{bot_id}/knowledge", json=body).data
+            "dict[str, Any]", self._c.post(f"/api/agents/{agent_id}/knowledge", json=body).data
         )
 
-    def add_text(self, bot_id: str, title: str, text: str) -> dict[str, Any]:
-        """Teach an assistant something, without assembling the discriminator.
+    def add_text(self, agent_id: str, title: str, text: str) -> dict[str, Any]:
+        """Teach an agent something, without assembling the discriminator.
 
         Indexing is asynchronous - poll :meth:`status` until it reports
         ``ready``. Adding identical text twice is a no-op: the existing
         document comes back rather than being embedded again.
         """
-        return self.create(bot_id, source_type="raw_text", title=title, raw_text=text)
+        return self.create(agent_id, source_type="raw_text", title=title, raw_text=text)
 
-    def status(self, bot_id: str, document_id: str) -> dict[str, Any]:
+    def status(self, agent_id: str, document_id: str) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            self._c.get(f"/api/bots/{bot_id}/knowledge/{document_id}/status").data,
+            self._c.get(f"/api/agents/{agent_id}/knowledge/{document_id}/status").data,
         )
 
-    def delete(self, bot_id: str, document_id: str) -> None:
-        self._c.delete(f"/api/bots/{bot_id}/knowledge/{document_id}")
+    def delete(self, agent_id: str, document_id: str) -> None:
+        self._c.delete(f"/api/agents/{agent_id}/knowledge/{document_id}")
 
 
 class _Analytics:
     def __init__(self, client: Integrable) -> None:
         self._c = client
 
-    def for_bot(self, bot_id: str, days: int = 30) -> dict[str, Any]:
+    def for_agent(self, agent_id: str, days: int = 30) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            self._c.get(f"/api/bots/{bot_id}/analytics", query={"days": days}).data,
+            self._c.get(f"/api/agents/{agent_id}/analytics", query={"days": days}).data,
         )
 
-    def gaps(self, bot_id: str) -> dict[str, Any]:
-        """Questions the assistant could not answer well."""
-        return cast("dict[str, Any]", self._c.get(f"/api/bots/{bot_id}/analytics/gaps").data)
+    def gaps(self, agent_id: str) -> dict[str, Any]:
+        """Questions the agent could not answer well."""
+        return cast("dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/analytics/gaps").data)
 
 
 class _Webhooks:
@@ -420,76 +420,76 @@ class _Webhooks:
 # The async mirrors. Same paths, same argument names; only the awaits differ.
 
 
-class _AsyncBots:
+class _AsyncAgents:
     def __init__(self, client: AsyncIntegrable) -> None:
         self._c = client
 
     async def list(self, **query: Any) -> dict[str, Any]:
-        return cast("dict[str, Any]", (await self._c.get("/api/bots", query=query)).data)
+        return cast("dict[str, Any]", (await self._c.get("/api/agents", query=query)).data)
 
     def walk(self, **query: Any) -> AsyncIterator[dict[str, Any]]:
-        return self._c.paginate("/api/bots", query)
+        return self._c.paginate("/api/agents", query)
 
-    async def get(self, bot_id: str) -> dict[str, Any]:
-        return cast("dict[str, Any]", (await self._c.get(f"/api/bots/{bot_id}")).data)
+    async def get(self, agent_id: str) -> dict[str, Any]:
+        return cast("dict[str, Any]", (await self._c.get(f"/api/agents/{agent_id}")).data)
 
     async def create(self, **body: Any) -> dict[str, Any]:
-        return cast("dict[str, Any]", (await self._c.post("/api/bots", json=body)).data)
+        return cast("dict[str, Any]", (await self._c.post("/api/agents", json=body)).data)
 
-    async def update(self, bot_id: str, **body: Any) -> dict[str, Any]:
+    async def update(self, agent_id: str, **body: Any) -> dict[str, Any]:
         return cast(
-            "dict[str, Any]", (await self._c.patch(f"/api/bots/{bot_id}", json=body)).data
+            "dict[str, Any]", (await self._c.patch(f"/api/agents/{agent_id}", json=body)).data
         )
 
-    async def delete(self, bot_id: str) -> None:
-        await self._c.delete(f"/api/bots/{bot_id}")
+    async def delete(self, agent_id: str) -> None:
+        await self._c.delete(f"/api/agents/{agent_id}")
 
 
 class _AsyncConversations:
     def __init__(self, client: AsyncIntegrable) -> None:
         self._c = client
 
-    async def list(self, bot_id: str, **query: Any) -> dict[str, Any]:
+    async def list(self, agent_id: str, **query: Any) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            (await self._c.get(f"/api/bots/{bot_id}/conversations", query=query)).data,
+            (await self._c.get(f"/api/agents/{agent_id}/conversations", query=query)).data,
         )
 
-    def walk(self, bot_id: str, **query: Any) -> AsyncIterator[dict[str, Any]]:
-        return self._c.paginate(f"/api/bots/{bot_id}/conversations", query)
+    def walk(self, agent_id: str, **query: Any) -> AsyncIterator[dict[str, Any]]:
+        return self._c.paginate(f"/api/agents/{agent_id}/conversations", query)
 
 
 class _AsyncKnowledge:
     def __init__(self, client: AsyncIntegrable) -> None:
         self._c = client
 
-    async def list(self, bot_id: str, **query: Any) -> dict[str, Any]:
+    async def list(self, agent_id: str, **query: Any) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            (await self._c.get(f"/api/bots/{bot_id}/knowledge", query=query)).data,
+            (await self._c.get(f"/api/agents/{agent_id}/knowledge", query=query)).data,
         )
 
-    def walk(self, bot_id: str, **query: Any) -> AsyncIterator[dict[str, Any]]:
-        return self._c.paginate(f"/api/bots/{bot_id}/knowledge", query)
+    def walk(self, agent_id: str, **query: Any) -> AsyncIterator[dict[str, Any]]:
+        return self._c.paginate(f"/api/agents/{agent_id}/knowledge", query)
 
-    async def create(self, bot_id: str, **body: Any) -> dict[str, Any]:
+    async def create(self, agent_id: str, **body: Any) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            (await self._c.post(f"/api/bots/{bot_id}/knowledge", json=body)).data,
+            (await self._c.post(f"/api/agents/{agent_id}/knowledge", json=body)).data,
         )
 
-    async def add_text(self, bot_id: str, title: str, text: str) -> dict[str, Any]:
-        return await self.create(bot_id, source_type="raw_text", title=title, raw_text=text)
+    async def add_text(self, agent_id: str, title: str, text: str) -> dict[str, Any]:
+        return await self.create(agent_id, source_type="raw_text", title=title, raw_text=text)
 
 
 class _AsyncAnalytics:
     def __init__(self, client: AsyncIntegrable) -> None:
         self._c = client
 
-    async def for_bot(self, bot_id: str, days: int = 30) -> dict[str, Any]:
+    async def for_agent(self, agent_id: str, days: int = 30) -> dict[str, Any]:
         return cast(
             "dict[str, Any]",
-            (await self._c.get(f"/api/bots/{bot_id}/analytics", query={"days": days})).data,
+            (await self._c.get(f"/api/agents/{agent_id}/analytics", query={"days": days})).data,
         )
 
 
