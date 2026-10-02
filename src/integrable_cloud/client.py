@@ -44,6 +44,27 @@ def _clean(query: Query | None) -> dict[str, Any]:
     return {k: v for k, v in (query or {}).items() if v is not None}
 
 
+def _next_step(page: Mapping[str, Any], seen: set[str]) -> dict[str, Any] | None:
+    """The query that fetches the page after ``page``, or ``None`` at the end.
+
+    Most list endpoints hand back ``next_cursor``. A few (agents, knowledge)
+    are still numbered: they say ``has_more`` with no cursor, and stopping
+    there would quietly return only the first page, so those advance ``page``.
+    The ``seen`` set guards a server that repeats a cursor forever - otherwise
+    an infinite loop hammering the API.
+    """
+    if not page.get("has_more") or not page.get("items"):
+        return None
+    nxt = page.get("next_cursor")
+    if nxt:
+        if nxt in seen:
+            return None
+        seen.add(nxt)
+        return {"cursor": nxt}
+    number = page.get("page")
+    return {"page": number + 1} if isinstance(number, int) else None
+
+
 class Integrable:
     """Synchronous client."""
 
@@ -131,23 +152,17 @@ class Integrable:
     def paginate(self, path: str, query: Query | None = None) -> Iterator[dict[str, Any]]:
         """Walks every page of a list endpoint, lazily.
 
-        Follow the cursor; never increment a page number against this API.
-        Offset pagination makes Postgres read and discard every skipped row, so
-        page 40 costs forty times page 1 and eventually times out.
+        Follows the cursor wherever the endpoint returns one. Offset pagination
+        makes Postgres read and discard every skipped row, so page 40 costs
+        forty times page 1; page numbers are used only on the few endpoints
+        that have no cursor yet.
         """
-        cursor: str | None = None
+        step: dict[str, Any] | None = {}
         seen: set[str] = set()
-        while True:
-            page = self.get(path, query={**_clean(query), "cursor": cursor}).data or {}
+        while step is not None:
+            page = self.get(path, query={**_clean(query), **step}).data or {}
             yield from page.get("items") or []
-
-            nxt = page.get("next_cursor")
-            # Guards a server that returns the same cursor with has_more
-            # forever - otherwise an infinite loop hammering the API.
-            if not page.get("has_more") or not nxt or nxt in seen:
-                return
-            seen.add(nxt)
-            cursor = nxt
+            step = _next_step(page, seen)
 
     def close(self) -> None:
         if self._owns_http:
@@ -246,19 +261,14 @@ class AsyncIntegrable:
     async def paginate(
         self, path: str, query: Query | None = None
     ) -> AsyncIterator[dict[str, Any]]:
-        cursor: str | None = None
+        step: dict[str, Any] | None = {}
         seen: set[str] = set()
-        while True:
-            response = await self.get(path, query={**_clean(query), "cursor": cursor})
+        while step is not None:
+            response = await self.get(path, query={**_clean(query), **step})
             page = response.data or {}
             for item in page.get("items") or []:
                 yield item
-
-            nxt = page.get("next_cursor")
-            if not page.get("has_more") or not nxt or nxt in seen:
-                return
-            seen.add(nxt)
-            cursor = nxt
+            step = _next_step(page, seen)
 
     async def aclose(self) -> None:
         if self._owns_http:
@@ -311,7 +321,8 @@ class _Conversations:
 
     def list(self, agent_id: str, **query: Any) -> dict[str, Any]:
         return cast(
-            "dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/conversations", query=query).data
+            "dict[str, Any]",
+            self._c.get(f"/api/agents/{agent_id}/conversations", query=query).data,
         )
 
     def walk(self, agent_id: str, **query: Any) -> Iterator[dict[str, Any]]:
@@ -373,7 +384,9 @@ class _Analytics:
 
     def gaps(self, agent_id: str) -> dict[str, Any]:
         """Questions the agent could not answer well."""
-        return cast("dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/analytics/gaps").data)
+        return cast(
+            "dict[str, Any]", self._c.get(f"/api/agents/{agent_id}/analytics/gaps").data
+        )
 
 
 class _Webhooks:

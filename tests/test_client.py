@@ -353,6 +353,21 @@ def test_a_repeated_cursor_stops_rather_than_looping_forever():
 
 
 @respx.mock
+def test_a_numbered_endpoint_walks_past_page_one():
+    """Agents and knowledge say has_more with no cursor; stopping there
+    returned only the first 20 documents."""
+    route = respx.get(f"{BASE}/api/agents/a1/knowledge").mock(
+        side_effect=[
+            httpx.Response(200, json={"items": [{"id": "1"}], "page": 1, "has_more": True}),
+            httpx.Response(200, json={"items": [{"id": "2"}], "page": 2, "has_more": False}),
+        ]
+    )
+    assert [d["id"] for d in client().knowledge.walk("a1")] == ["1", "2"]
+    assert route.calls[1].request.url.params["page"] == "2"
+    assert "cursor" not in route.calls[1].request.url.params
+
+
+@respx.mock
 def test_a_none_query_value_is_dropped_not_sent_empty():
     """`?cursor=` and no cursor mean different things to a paginated endpoint;
     sending the first when you meant the second returns page one forever."""
@@ -407,3 +422,19 @@ async def test_the_async_client_paginates():
     async with AsyncIntegrable(KEY) as c:
         seen = [b["id"] async for b in c.agents.walk()]
     assert seen == ["1", "2"]
+
+
+def test_version_matches_pyproject() -> None:
+    # The release publishes pyproject.toml's version; __version__ and the
+    # User-Agent must say the same, or 0.1.0 ships labelled as itself again.
+    import pathlib
+    import re
+
+    import integrable_cloud
+    from integrable_cloud._client import _USER_AGENT
+
+    text = (pathlib.Path(__file__).parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'^version = "([^"]+)"', text, re.MULTILINE)
+    assert match is not None
+    assert integrable_cloud.__version__ == match.group(1)
+    assert _USER_AGENT.endswith("/" + match.group(1))

@@ -20,7 +20,7 @@ for agent in client.agents.walk():
     print(agent["id"], agent["name"], agent["status"])
 ```
 
-Create a key in the dashboard under **Settings → API keys**. It starts with `sk_live_` and is shown once.
+Create a key in the agent studio under **Developer → API keys** ([app.integrable.cloud/developer/keys](https://app.integrable.cloud/developer/keys)). It starts with `sk_live_` and is shown once.
 
 ## Async
 
@@ -32,7 +32,7 @@ from integrable_cloud import AsyncIntegrable
 async with AsyncIntegrable(api_key=...) as client:
     page = await client.agents.list()
 
-    async for conversation in client.conversations.walk(agent_id, days=30):
+    async for conversation in client.conversations.walk(agent_id, date_from="2026-09-01"):
         await sync_to_crm(conversation)
 ```
 
@@ -54,7 +54,7 @@ A mutating request without a key is never retried: "did that land?" is exactly t
 **Pagination that stays fast.**
 
 ```python
-for conversation in client.conversations.walk(agent_id, days=30):
+for conversation in client.conversations.walk(agent_id, date_from="2026-09-01"):
     process(conversation)
 ```
 
@@ -102,7 +102,7 @@ client = Integrable(
 The typed resources cover the common calls. All 149 endpoints are reachable directly:
 
 ```python
-response = client.get(f"/api/agents/{agent_id}/contacts", query={"limit": 50})
+response = client.get(f"/api/agents/{agent_id}/contacts", query={"page_size": 50})
 print(response.data["items"])
 print(response.api_version, response.request_id)
 ```

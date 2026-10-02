@@ -32,6 +32,7 @@ from urllib.parse import urljoin
 
 import httpx
 
+from ._version import __version__
 from .errors import (
     ConnectionError_,
     IntegrableError,
@@ -41,7 +42,7 @@ from .errors import (
 
 DEFAULT_BASE_URL = "https://api.integrable.cloud"
 _MUTATING = frozenset({"POST", "PUT", "PATCH", "DELETE"})
-_USER_AGENT = "integrable-cloud-python/0.1.0"
+_USER_AGENT = f"integrable-cloud-python/{__version__}"
 
 
 class RateLimit:
@@ -112,8 +113,9 @@ class _Core:
     ) -> None:
         if not api_key:
             raise ValueError(
-                "An API key is required. Create one at Settings -> API keys, then "
-                "pass it as Integrable(api_key=...)."
+                "An API key is required. Create one at "
+                "app.integrable.cloud/developer/keys, then pass it as "
+                "Integrable(api_key=...)."
             )
         if not api_key.startswith("sk_"):
             raise ValueError(

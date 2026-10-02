@@ -60,6 +60,48 @@
         "title": "AcceptRequest",
         "type": "object"
       },
+      "AcceptStaffInvitationRequest": {
+        "description": "Deliberately has no `staff_level` and no `access_until`.\n\nThe tier and the window come from the invitation row. A field here would be\nthe person being granted access choosing their own authority, which is the\nwhole vulnerability this flow exists to avoid - and one that a well-meaning\n\"let the client send what the preview returned\" would introduce silently.",
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 8,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "token": {
+            "maxLength": 512,
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "AcceptStaffInvitationRequest",
+        "type": "object"
+      },
       "AgentBlueprint": {
         "description": "The generated configuration, before it becomes an agent.",
         "properties": {
@@ -287,6 +329,16 @@
             "title": "Language",
             "type": "string"
           },
+          "language_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LanguageConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "lead_capture_config": {
             "anyOf": [
               {
@@ -434,7 +486,6 @@
           "website_url": {
             "anyOf": [
               {
-                "maxLength": 1000,
                 "type": "string"
               },
               {
@@ -591,6 +642,11 @@
             "title": "Language",
             "type": "string"
           },
+          "language_config": {
+            "additionalProperties": true,
+            "title": "Language Config",
+            "type": "object"
+          },
           "last_error": {
             "anyOf": [
               {
@@ -620,6 +676,17 @@
           "max_tokens": {
             "title": "Max Tokens",
             "type": "integer"
+          },
+          "messages_this_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messages This Month"
           },
           "model": {
             "anyOf": [
@@ -680,6 +747,11 @@
           "temperature": {
             "title": "Temperature",
             "type": "number"
+          },
+          "thinking_budget_tokens": {
+            "default": 2048,
+            "title": "Thinking Budget Tokens",
+            "type": "integer"
           },
           "thinking_enabled": {
             "title": "Thinking Enabled",
@@ -907,6 +979,16 @@
               }
             ],
             "title": "Language"
+          },
+          "language_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LanguageConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "lead_capture_config": {
             "anyOf": [
@@ -1157,6 +1239,77 @@
         "title": "AllocationUpdate",
         "type": "object"
       },
+      "AssistantEscalation": {
+        "description": "Turning a chat into a ticket. Everything is optional and pre-filled.\n\nThe subject and body default to what the assistant already built from the\ntranscript, so the common case is one button with nothing to type.",
+        "properties": {
+          "category": {
+            "default": "other",
+            "maxLength": 32,
+            "title": "Category",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "priority": {
+            "default": "normal",
+            "pattern": "^(low|normal|high)$",
+            "title": "Priority",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "title": "AssistantEscalation",
+        "type": "object"
+      },
+      "AssistantQuestion": {
+        "properties": {
+          "question": {
+            "maxLength": 2000,
+            "minLength": 2,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "AssistantQuestion",
+        "type": "object"
+      },
+      "AssistantRating": {
+        "properties": {
+          "helpful": {
+            "title": "Helpful",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "helpful"
+        ],
+        "title": "AssistantRating",
+        "type": "object"
+      },
       "BillingProfileIn": {
         "description": "The addressee for receipts, and the tax registration to print on them.",
         "properties": {
@@ -1324,6 +1477,20 @@
           "file"
         ],
         "title": "Body_upload_document_api_agents__agent_id__knowledge_upload_post",
+        "type": "object"
+      },
+      "Body_upload_launcher_icon_api_agents__agent_id__theme_launcher_icon_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_launcher_icon_api_agents__agent_id__theme_launcher_icon_post",
         "type": "object"
       },
       "Body_validate_blueprint_api_blueprints_validate_post": {
@@ -1657,9 +1824,30 @@
         "title": "ChangePasswordRequest",
         "type": "object"
       },
+      "ChangePlanRequest": {
+        "description": "The plan an existing subscriber moves to. Price and product are ours.",
+        "properties": {
+          "tier": {
+            "description": "One of the purchasable tiers",
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier"
+        ],
+        "title": "ChangePlanRequest",
+        "type": "object"
+      },
       "CheckoutRequest": {
         "description": "What to buy. Notably absent: any price, and any product id.",
         "properties": {
+          "method": {
+            "default": "card",
+            "maxLength": 16,
+            "title": "Method",
+            "type": "string"
+          },
           "quantity": {
             "default": 1,
             "maximum": 100.0,
@@ -3355,6 +3543,100 @@
         "title": "ExportRequest",
         "type": "object"
       },
+      "FeatureRequestCreate": {
+        "properties": {
+          "area": {
+            "default": "other",
+            "maxLength": 32,
+            "title": "Area",
+            "type": "string"
+          },
+          "body": {
+            "maxLength": 8000,
+            "minLength": 15,
+            "title": "Body",
+            "type": "string"
+          },
+          "importance": {
+            "default": "nice",
+            "pattern": "^(nice|important|blocking)$",
+            "title": "Importance",
+            "type": "string"
+          },
+          "problem": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Problem",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 5,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "title": "FeatureRequestCreate",
+        "type": "object"
+      },
+      "FeatureRequestUpdate": {
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "importance": {
+            "anyOf": [
+              {
+                "pattern": "^(nice|important|blocking)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Importance"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "FeatureRequestUpdate",
+        "type": "object"
+      },
       "FlowSave": {
         "properties": {
           "agent_id": {
@@ -3544,6 +3826,95 @@
           "to_color"
         ],
         "title": "Gradient",
+        "type": "object"
+      },
+      "GreetingTranslateRequest": {
+        "properties": {
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Languages",
+            "type": "array"
+          },
+          "starter_questions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 6,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starter Questions"
+          },
+          "welcome_message": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Welcome Message"
+          }
+        },
+        "required": [
+          "languages"
+        ],
+        "title": "GreetingTranslateRequest",
+        "type": "object"
+      },
+      "GreetingTranslation": {
+        "description": "The greeting and suggested questions, in one other language.",
+        "properties": {
+          "edited": {
+            "default": false,
+            "title": "Edited",
+            "type": "boolean"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "starter_questions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "title": "Starter Questions",
+            "type": "array"
+          },
+          "welcome_message": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Welcome Message"
+          }
+        },
+        "title": "GreetingTranslation",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -4130,8 +4501,50 @@
         "title": "LLMProviderType",
         "type": "string"
       },
+      "LanguageConfig": {
+        "description": "How an agent handles more than one language. Defaults are the\nbehaviour of an agent that never opened the settings: follow the page,\nfollow the visitor, every language, greetings translated automatically.",
+        "properties": {
+          "auto_translate": {
+            "default": true,
+            "title": "Auto Translate",
+            "type": "boolean"
+          },
+          "detect_page": {
+            "default": true,
+            "title": "Detect Page",
+            "type": "boolean"
+          },
+          "follow_visitor": {
+            "default": true,
+            "title": "Follow Visitor",
+            "type": "boolean"
+          },
+          "supported": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 40,
+            "title": "Supported",
+            "type": "array"
+          },
+          "translations": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/GreetingTranslation"
+            },
+            "title": "Translations",
+            "type": "object"
+          }
+        },
+        "title": "LanguageConfig",
+        "type": "object"
+      },
       "LeadCaptureConfig": {
         "properties": {
+          "ask_in_chat": {
+            "default": true,
+            "title": "Ask In Chat",
+            "type": "boolean"
+          },
           "enabled": {
             "default": false,
             "title": "Enabled",
@@ -5233,6 +5646,354 @@
         "title": "PaginatedResponse[WebhookDeliveryResponse]",
         "type": "object"
       },
+      "PlaygroundChat": {
+        "properties": {
+          "message": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "overrides": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlaygroundOverrides"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "session_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "session_id"
+        ],
+        "title": "PlaygroundChat",
+        "type": "object"
+      },
+      "PlaygroundLead": {
+        "properties": {
+          "conversation_id": {
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "maxProperties": 30,
+            "title": "Fields",
+            "type": "object"
+          }
+        },
+        "required": [
+          "conversation_id",
+          "fields"
+        ],
+        "title": "PlaygroundLead",
+        "type": "object"
+      },
+      "PlaygroundOverrides": {
+        "description": "The behaviour fields a test may try. Bounds match `AgentUpdate`.",
+        "properties": {
+          "fallback_message": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback Message"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "lead_capture_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadCaptureConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "maximum": 32768.0,
+                "minimum": 64.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens"
+          },
+          "strict_kb_mode": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strict Kb Mode"
+          },
+          "suggest_followups": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggest Followups"
+          },
+          "system_prompt": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "maximum": 2.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature"
+          },
+          "thinking_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thinking Enabled"
+          }
+        },
+        "title": "PlaygroundOverrides",
+        "type": "object"
+      },
+      "PolicyPatch": {
+        "description": "A settings change on an existing channel.\n\nEvery field is optional and only the ones actually SENT are applied, so\n`null` means \"clear this\" - drop the quiet window, remove the cap, unscope\nfrom an agent - rather than \"leave it alone\". `model_fields_set` is what\ncarries that distinction, which is why this cannot simply reuse\n`PolicyRequest` with defaults.\n\n`channel` and `destination` are absent on purpose: they identify the row,\nand a new destination is a new channel that has to be verified before\nanything is sent to it.",
+        "properties": {
+          "agent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id"
+          },
+          "daily_cap": {
+            "anyOf": [
+              {
+                "maximum": 2000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Cap"
+          },
+          "digest": {
+            "anyOf": [
+              {
+                "pattern": "^(none|daily|weekly)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Digest"
+          },
+          "digest_hour": {
+            "anyOf": [
+              {
+                "maximum": 23.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Digest Hour"
+          },
+          "digest_weekday": {
+            "anyOf": [
+              {
+                "maximum": 6.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Digest Weekday"
+          },
+          "events": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Events"
+          },
+          "intensity": {
+            "anyOf": [
+              {
+                "pattern": "^(off|critical|leads|all|digest)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intensity"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "min_lead_score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Lead Score"
+          },
+          "quiet_end": {
+            "anyOf": [
+              {
+                "maximum": 23.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet End"
+          },
+          "quiet_start": {
+            "anyOf": [
+              {
+                "maximum": 23.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet Start"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "title": "PolicyPatch",
+        "type": "object"
+      },
       "PolicyRequest": {
         "properties": {
           "agent_id": {
@@ -5608,6 +6369,11 @@
               }
             ],
             "title": "Refresh Token"
+          },
+          "support": {
+            "default": true,
+            "title": "Support",
+            "type": "boolean"
           }
         },
         "title": "RefreshRequest",
@@ -5663,7 +6429,6 @@
           "website_url": {
             "anyOf": [
               {
-                "maxLength": 2000,
                 "type": "string"
               },
               {
@@ -5965,10 +6730,16 @@
       "ScanRequest": {
         "properties": {
           "website_url": {
-            "maxLength": 2000,
-            "minLength": 4,
-            "title": "Website Url",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A website address, with or without a scheme.",
+            "title": "Website Url"
           }
         },
         "required": [
@@ -6276,6 +7047,80 @@
         "title": "SmsProviderRequest",
         "type": "object"
       },
+      "StaffInvitationPreview": {
+        "description": "What the staff acceptance page may know before anyone has signed in.\n\nThinner than its workspace counterpart, and for a sharper reason: this token\nis an offer of access to every customer's data, so holding it earns the\nrecipient the terms of the offer - the tier, the end date, who made it - and\nnothing whatsoever about the platform or its customers.\n\n`needs_password` is what lets the page ask for one only when it is wanted:\ntrue for an address with no account, and for one that has only ever signed\nin with Google and therefore has no password to sign into the console with.",
+        "properties": {
+          "access_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Until"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "has_account": {
+            "default": false,
+            "title": "Has Account",
+            "type": "boolean"
+          },
+          "invited_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By"
+          },
+          "needs_password": {
+            "default": true,
+            "title": "Needs Password",
+            "type": "boolean"
+          },
+          "staff_level": {
+            "enum": [
+              "view",
+              "edit",
+              "owner"
+            ],
+            "title": "Staff Level",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "staff_level",
+          "expires_at"
+        ],
+        "title": "StaffInvitationPreview",
+        "type": "object"
+      },
       "StepBody": {
         "properties": {
           "body": {
@@ -6435,12 +7280,81 @@
         "title": "SubAccountRead",
         "type": "object"
       },
+      "SupportEnterRequest": {
+        "properties": {
+          "token": {
+            "maxLength": 200,
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "SupportEnterRequest",
+        "type": "object"
+      },
+      "SupportSessionInfo": {
+        "description": "Present on a token issued inside a staff support session.\n\nWhat the customer surfaces need to draw the banner that says so - whose\nworkspace, whether changes are allowed, and when it ends by itself.",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "org_id": {
+            "title": "Org Id",
+            "type": "string"
+          },
+          "org_name": {
+            "title": "Org Name",
+            "type": "string"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "write": {
+            "title": "Write",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "session_id",
+          "org_id",
+          "org_name",
+          "write",
+          "expires_at"
+        ],
+        "title": "SupportSessionInfo",
+        "type": "object"
+      },
       "SuppressBody": {
         "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
           "email_bidx": {
-            "maxLength": 64,
-            "title": "Email Bidx",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Bidx"
           },
           "note": {
             "anyOf": [
@@ -6455,9 +7369,6 @@
             "title": "Note"
           }
         },
-        "required": [
-          "email_bidx"
-        ],
         "title": "SuppressBody",
         "type": "object"
       },
@@ -6495,6 +7406,14 @@
       },
       "TestMessageRequest": {
         "properties": {
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/TestTurn"
+            },
+            "maxItems": 20,
+            "title": "History",
+            "type": "array"
+          },
           "message": {
             "maxLength": 4000,
             "minLength": 1,
@@ -6580,6 +7499,30 @@
         "title": "TestSendBody",
         "type": "object"
       },
+      "TestTurn": {
+        "properties": {
+          "content": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "TestTurn",
+        "type": "object"
+      },
       "ThemeGenerateRequest": {
         "description": "Ask for a palette instead of designing one.",
         "properties": {
@@ -6603,7 +7546,6 @@
           "website_url": {
             "anyOf": [
               {
-                "maxLength": 1000,
                 "type": "string"
               },
               {
@@ -6732,6 +7674,16 @@
               }
             ],
             "title": "Refresh Token"
+          },
+          "support": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SupportSessionInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "token_type": {
             "default": "bearer",
@@ -7736,9 +8688,30 @@
             "title": "Is Active",
             "type": "boolean"
           },
+          "is_staff": {
+            "default": false,
+            "title": "Is Staff",
+            "type": "boolean"
+          },
           "is_verified": {
             "title": "Is Verified",
             "type": "boolean"
+          },
+          "staff_level": {
+            "anyOf": [
+              {
+                "enum": [
+                  "view",
+                  "edit",
+                  "owner"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Level"
           }
         },
         "required": [
@@ -7794,6 +8767,18 @@
       },
       "VariantRequest": {
         "properties": {
+          "brand_colour": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand Colour"
+          },
           "description": {
             "maxLength": 4000,
             "minLength": 10,
@@ -7803,7 +8788,6 @@
           "website_url": {
             "anyOf": [
               {
-                "maxLength": 2000,
                 "type": "string"
               },
               {
@@ -7855,6 +8839,17 @@
           "token"
         ],
         "title": "VerifyEmailRequest",
+        "type": "object"
+      },
+      "VoteChange": {
+        "properties": {
+          "wanted": {
+            "default": true,
+            "title": "Wanted",
+            "type": "boolean"
+          }
+        },
+        "title": "VoteChange",
         "type": "object"
       },
       "WebhookCreate": {
@@ -8501,11 +9496,28 @@
             "title": "Agent Bubble Bg",
             "type": "string"
           },
+          "agent_bubble_style": {
+            "default": "soft",
+            "enum": [
+              "soft",
+              "flat",
+              "outline",
+              "glass",
+              "tail"
+            ],
+            "title": "Agent Bubble Style",
+            "type": "string"
+          },
           "agent_bubble_text": {
             "default": "#0F172A",
             "pattern": "^#[0-9A-Fa-f]{6}$",
             "title": "Agent Bubble Text",
             "type": "string"
+          },
+          "agent_bubble_tint": {
+            "default": true,
+            "title": "Agent Bubble Tint",
+            "type": "boolean"
           },
           "avatar_url": {
             "anyOf": [
@@ -8560,6 +9572,17 @@
             ],
             "title": "Bubble Text"
           },
+          "composer_style": {
+            "default": "rounded",
+            "enum": [
+              "pill",
+              "rounded",
+              "inset",
+              "flat"
+            ],
+            "title": "Composer Style",
+            "type": "string"
+          },
           "custom_css": {
             "anyOf": [
               {
@@ -8594,6 +9617,88 @@
             "default": "system",
             "title": "Font"
           },
+          "header_bg": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Bg"
+          },
+          "header_gradient": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Gradient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "header_headline": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Headline"
+          },
+          "header_highlight": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Highlight"
+          },
+          "header_link_label": {
+            "anyOf": [
+              {
+                "maxLength": 48,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Link Label"
+          },
+          "header_link_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Link Url"
+          },
+          "header_pattern": {
+            "default": "none",
+            "enum": [
+              "none",
+              "dots",
+              "grid",
+              "rings",
+              "noise"
+            ],
+            "title": "Header Pattern",
+            "type": "string"
+          },
           "header_subtitle": {
             "anyOf": [
               {
@@ -8624,6 +9729,17 @@
             ],
             "title": "Header Title"
           },
+          "header_variant": {
+            "default": "bar",
+            "enum": [
+              "bar",
+              "hero",
+              "cover",
+              "minimal"
+            ],
+            "title": "Header Variant",
+            "type": "string"
+          },
           "inline_target": {
             "anyOf": [
               {
@@ -8647,10 +9763,66 @@
             "title": "Launcher Animation",
             "type": "string"
           },
+          "launcher_cta": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Launcher Cta"
+          },
+          "launcher_effect": {
+            "default": "solid",
+            "enum": [
+              "solid",
+              "light",
+              "glass"
+            ],
+            "title": "Launcher Effect",
+            "type": "string"
+          },
+          "launcher_gradient": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Gradient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "launcher_icon": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Launcher Icon"
+          },
+          "launcher_image_url": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Launcher Image Url"
+          },
           "launcher_label": {
             "anyOf": [
               {
-                "maxLength": 28,
+                "maxLength": 40,
                 "type": "string"
               },
               {
@@ -8659,12 +9831,23 @@
             ],
             "title": "Launcher Label"
           },
+          "launcher_ring": {
+            "default": false,
+            "title": "Launcher Ring",
+            "type": "boolean"
+          },
           "launcher_shape": {
             "default": "circle",
             "enum": [
               "circle",
               "rounded",
-              "square"
+              "square",
+              "squircle",
+              "pill",
+              "cylinder",
+              "blob",
+              "teardrop",
+              "emoji"
             ],
             "title": "Launcher Shape",
             "type": "string"
@@ -8683,9 +9866,66 @@
             "default": "icon",
             "enum": [
               "icon",
-              "pill"
+              "pill",
+              "bar",
+              "tab",
+              "dot",
+              "banner",
+              "card",
+              "ribbon",
+              "side"
             ],
             "title": "Launcher Style",
+            "type": "string"
+          },
+          "launcher_subtitle": {
+            "anyOf": [
+              {
+                "maxLength": 90,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Launcher Subtitle"
+          },
+          "launcher_teaser": {
+            "anyOf": [
+              {
+                "maxLength": 140,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Launcher Teaser"
+          },
+          "launcher_teaser_delay": {
+            "default": 2,
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Launcher Teaser Delay",
+            "type": "integer"
+          },
+          "launcher_teaser_style": {
+            "default": "bubble",
+            "enum": [
+              "bubble",
+              "message",
+              "tooltip"
+            ],
+            "title": "Launcher Teaser Style",
+            "type": "string"
+          },
+          "launcher_teaser_trigger": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "hover"
+            ],
+            "title": "Launcher Teaser Trigger",
             "type": "string"
           },
           "layout": {
@@ -8693,10 +9933,22 @@
             "enum": [
               "floating",
               "sidebar",
+              "modal",
+              "spotlight",
+              "sheet",
               "inline",
               "fullscreen"
             ],
             "title": "Layout",
+            "type": "string"
+          },
+          "message_density": {
+            "default": "comfortable",
+            "enum": [
+              "comfortable",
+              "compact"
+            ],
+            "title": "Message Density",
             "type": "string"
           },
           "messages_bg": {
@@ -8707,14 +9959,14 @@
           },
           "offset_x": {
             "default": 20,
-            "maximum": 120.0,
+            "maximum": 200.0,
             "minimum": 0.0,
             "title": "Offset X",
             "type": "integer"
           },
           "offset_y": {
             "default": 20,
-            "maximum": 120.0,
+            "maximum": 200.0,
             "minimum": 0.0,
             "title": "Offset Y",
             "type": "integer"
@@ -8750,13 +10002,35 @@
             "default": "bottom-right",
             "enum": [
               "bottom-right",
-              "bottom-left"
+              "bottom-left",
+              "bottom-center",
+              "middle-right",
+              "middle-left",
+              "top-center"
             ],
             "title": "Position",
             "type": "string"
           },
+          "preset": {
+            "default": "classic",
+            "maxLength": 32,
+            "title": "Preset",
+            "type": "string"
+          },
+          "preset_downgraded_from": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Downgraded From"
+          },
           "primary_color": {
-            "default": "#4F46E5",
+            "default": "#0A0A0A",
             "pattern": "^#[0-9A-Fa-f]{6}$",
             "title": "Primary Color",
             "type": "string"
@@ -8786,6 +10060,37 @@
             "title": "Proactive Cooldown Days",
             "type": "integer"
           },
+          "send_gradient": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Gradient"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "send_shape": {
+            "default": "rounded",
+            "enum": [
+              "circle",
+              "rounded",
+              "square"
+            ],
+            "title": "Send Shape",
+            "type": "string"
+          },
+          "shadow": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "soft",
+              "medium",
+              "strong"
+            ],
+            "title": "Shadow",
+            "type": "string"
+          },
           "show_branding": {
             "default": true,
             "title": "Show Branding",
@@ -8795,6 +10100,32 @@
             "default": true,
             "title": "Show Citations",
             "type": "boolean"
+          },
+          "show_thread_avatar": {
+            "default": true,
+            "title": "Show Thread Avatar",
+            "type": "boolean"
+          },
+          "show_timestamps": {
+            "default": false,
+            "title": "Show Timestamps",
+            "type": "boolean"
+          },
+          "suggest_followups": {
+            "default": true,
+            "title": "Suggest Followups",
+            "type": "boolean"
+          },
+          "surface_style": {
+            "default": "raised",
+            "enum": [
+              "flat",
+              "raised",
+              "bordered",
+              "glass"
+            ],
+            "title": "Surface Style",
+            "type": "string"
           },
           "theme_mode": {
             "default": "auto",
@@ -8807,11 +10138,23 @@
             "type": "string"
           },
           "theme_version": {
-            "default": 2,
+            "default": 3,
             "maximum": 99.0,
             "minimum": 1.0,
             "title": "Theme Version",
             "type": "integer"
+          },
+          "transcript_bg": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript Bg"
           },
           "typing_indicator": {
             "default": "dots",
@@ -8819,9 +10162,34 @@
               "dots",
               "pulse",
               "wave",
+              "shimmer",
               "none"
             ],
             "title": "Typing Indicator",
+            "type": "string"
+          },
+          "user_bubble_bg": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Bubble Bg"
+          },
+          "user_bubble_style": {
+            "default": "soft",
+            "enum": [
+              "soft",
+              "flat",
+              "outline",
+              "glass",
+              "tail"
+            ],
+            "title": "User Bubble Style",
             "type": "string"
           },
           "user_bubble_text": {
@@ -8893,7 +10261,7 @@
     }
   },
   "info": {
-    "description": "The Integrable Cloud API.\n\nAuthenticate with `Authorization: Bearer sk_live_...`. Keys are created in the dashboard under Settings -> API keys and carry scopes; a call outside a key's scopes is refused with 403.\n\nEvery mutating request accepts `Idempotency-Key`. Every response carries `X-API-Version` and, where a budget applies, `RateLimit-*`.\n\nThere is also an MCP server at `/mcp` for connecting this workspace to Claude, ChatGPT or an editor. It uses the same API keys.",
+    "description": "The Integrable Cloud API.\n\nAuthenticate with `Authorization: Bearer sk_live_...`. Keys are created in the agent studio under Developer -> API keys and carry scopes; a call outside a key's scopes is refused with 403.\n\nEvery mutating request accepts `Idempotency-Key`. Every response carries `X-API-Version` and, where a budget applies, `RateLimit-*`.\n\nThere is also an MCP server at `/mcp` for connecting this workspace to Claude, ChatGPT or an editor. It uses the same API keys.",
     "title": "integrable.cloud",
     "version": "2026-09-03"
   },
@@ -9847,7 +11215,7 @@
     },
     "/api/agents/onboarding/variants": {
       "post": {
-        "description": "Three configurations to choose between.\n\nThey differ along one axis - how hard the agent pushes for contact\ndetails - because that is a decision about the customer's business rather\nthan a preference they can adjust later. Tone and verbosity are settings;\n\"do you want callbacks or answers\" is not.",
+        "description": "Three looks of the same agent to choose between (onboarding_service.VARIANTS).\n\nEach is a complete agent - voice, welcome, starter questions - dressed in\none palette drawn from the brand colour: the one the owner confirmed in\nthe request, else the one the scan found.",
         "operationId": "generate_variants_api_agents_onboarding_variants_post",
         "parameters": [
           {
@@ -9965,6 +11333,67 @@
           }
         ],
         "summary": "Generate Variants",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/api/agents/widget/designs": {
+      "get": {
+        "description": "The preset picker's contents, and which of them this plan can use.\n\nRegistered above `/{agent_id}` because FastAPI matches in declaration\norder and `widget` would otherwise be read as an agent id.\n\nThe locked ones are returned, not filtered out. A picker that hides what\nthe plan does not include cannot sell it, and the whole commercial case\nfor the premium half of this catalogue is that somebody looks at it. Each\nrow carries its tier; `required_plan` says what the cheapest plan that\nunlocks them is, so the lock can name a price instead of saying no.",
+        "operationId": "widget_designs_api_agents_widget_designs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Widget Designs Api Agents Widget Designs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Widget Designs",
         "tags": [
           "agents"
         ]
@@ -10986,7 +12415,7 @@
     },
     "/api/agents/{agent_id}/contacts": {
       "get": {
-        "description": "One row per person, deduplicated across sessions and devices - unlike\n/conversations, which is one row per session.",
+        "description": "One row per person, deduplicated across sessions and devices - unlike\n/conversations, which is one row per session.\n\n`test=true`: the people from the playground instead - the owner testing\ntheir own lead flow, kept apart from real leads and never sent anywhere.",
         "operationId": "list_contacts_api_agents__agent_id__contacts_get",
         "parameters": [
           {
@@ -11089,6 +12518,16 @@
             "schema": {
               "default": true,
               "title": "Count",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "test",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Test",
               "type": "boolean"
             }
           }
@@ -11443,7 +12882,7 @@
         ]
       },
       "get": {
-        "description": "Everything held about one person, for a subject access request.\n\nArticle 15 asks for a copy of the personal data undergoing processing in a\ncommonly used electronic form. The tenant is the controller and this is\nwhat lets them answer without opening a support ticket with us.",
+        "description": "Everything held about one person, for a subject access request.\n\nArticle 15 asks for a copy of the personal data undergoing processing in a\ncommonly used electronic form. The tenant is the controller and this is\nwhat lets them answer without opening a support ticket with us.\n\n`test=true` opens a playground test person (see `list_contacts`).",
         "operationId": "export_subject_data_api_agents__agent_id__contacts__contact_id__data_get",
         "parameters": [
           {
@@ -11462,6 +12901,16 @@
             "schema": {
               "title": "Contact Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "test",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Test",
+              "type": "boolean"
             }
           }
         ],
@@ -14436,6 +15885,769 @@
         ]
       }
     },
+    "/api/agents/{agent_id}/playground/chat": {
+      "post": {
+        "description": "One real turn, streamed with exactly the widget's frames.",
+        "operationId": "playground_chat_api_agents__agent_id__playground_chat_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaygroundChat"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Playground Chat",
+        "tags": [
+          "playground"
+        ]
+      }
+    },
+    "/api/agents/{agent_id}/playground/lead": {
+      "post": {
+        "description": "The widget's lead form, filed on the test contact.\n\nValidated exactly as the widget's is, and routed through the directory the\nsame way - so a test shows the booking link a visitor would get. What it\ndoes NOT do is match the details to a real returning customer, or tell\nanybody: no `lead_captured`, so no CRM push, no email, no webhook.",
+        "operationId": "playground_lead_api_agents__agent_id__playground_lead_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaygroundLead"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Playground Lead Api Agents  Agent Id  Playground Lead Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Playground Lead",
+        "tags": [
+          "playground"
+        ]
+      }
+    },
+    "/api/agents/{agent_id}/playground/sessions": {
+      "delete": {
+        "description": "Every test conversation this agent has, gone. Credits already drawn stay drawn.",
+        "operationId": "clear_playground_api_agents__agent_id__playground_sessions_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Playground",
+        "tags": [
+          "playground"
+        ]
+      },
+      "get": {
+        "description": "This agent's test conversations, newest first, with what each cost.",
+        "operationId": "playground_sessions_api_agents__agent_id__playground_sessions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Playground Sessions Api Agents  Agent Id  Playground Sessions Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Playground Sessions",
+        "tags": [
+          "playground"
+        ]
+      }
+    },
+    "/api/agents/{agent_id}/playground/sessions/{conversation_id}": {
+      "delete": {
+        "operationId": "delete_playground_session_api_agents__agent_id__playground_sessions__conversation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Playground Session",
+        "tags": [
+          "playground"
+        ]
+      },
+      "get": {
+        "description": "One test conversation, message by message, as the owner saw it.",
+        "operationId": "playground_session_api_agents__agent_id__playground_sessions__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Playground Session Api Agents  Agent Id  Playground Sessions  Conversation Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Playground Session",
+        "tags": [
+          "playground"
+        ]
+      }
+    },
     "/api/agents/{agent_id}/report": {
       "get": {
         "description": "The whole dashboard as a file, in any of five formats.\n\nAll five are renderings of one `Report` object, which is the property that\nmatters: a customer who exports the same period as a spreadsheet and as a\nPDF and finds two different numbers has learned something about this\nproduct that no amount of later accuracy undoes.\n\n`advanced` by default here, unlike the screen. Somebody who chose to\ndownload a file has asked for the data; the mode switch inside the HTML\nexport still lets them read it simply.",
@@ -15482,6 +17694,260 @@
         ]
       }
     },
+    "/api/agents/{agent_id}/theme/launcher-icon": {
+      "delete": {
+        "description": "Back to a drawn glyph. Always allowed - removing a premium look never is gated.",
+        "operationId": "delete_launcher_icon_api_agents__agent_id__theme_launcher_icon_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Launcher Icon",
+        "tags": [
+          "agents"
+        ]
+      },
+      "post": {
+        "description": "The launcher drawn from the tenant's own image - a premium look.\n\nSame storage, sniffing and size rules as the avatar (`avatar_service`,\nslot `launcher`), and the same gate as the premium launcher styles: the\nstudio lets anyone preview it and asks at Save, and this refuses a plan\nwithout `premium_widget_design` so the API cannot be used to skip that.",
+        "operationId": "upload_launcher_icon_api_agents__agent_id__theme_launcher_icon_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_launcher_icon_api_agents__agent_id__theme_launcher_icon_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Upload Launcher Icon Api Agents  Agent Id  Theme Launcher Icon Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Launcher Icon",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
     "/api/agents/{agent_id}/traffic": {
       "get": {
         "description": "Website traffic, not just widget traffic.\n\nThe denominator the funnel never had: how many people were on the site at\nall. \"42 opens\" is a number with no scale; \"42 of 3,140 visitors\" is the\nthing that makes a free customer upgrade.",
@@ -15605,6 +18071,140 @@
         "summary": "Traffic",
         "tags": [
           "insights"
+        ]
+      }
+    },
+    "/api/agents/{agent_id}/translate-greeting": {
+      "post": {
+        "description": "The greeting and suggested questions, translated for the editor.\n\nReturns the translations; it saves nothing. They land in the settings\ndraft, where the owner reads them, changes what they like and saves - the\nsame rule as every other setting (draft, then Save).",
+        "operationId": "translate_greeting_api_agents__agent_id__translate_greeting_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GreetingTranslateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Translate Greeting Api Agents  Agent Id  Translate Greeting Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Translate Greeting",
+        "tags": [
+          "agents"
         ]
       }
     },
@@ -16845,6 +19445,138 @@
           }
         ],
         "summary": "Delete Channel",
+        "tags": [
+          "alerts"
+        ]
+      },
+      "patch": {
+        "description": "Changes an existing channel's settings, without its destination.\n\n`PUT /api/alerts` keys on `(org_id, channel, destination)` and the list\nendpoint never returns a raw destination, so before this route existed the\nonly way to change a quiet hour from the dashboard was to ask the customer\nto re-type their own phone number. It is addressed by id instead.\n\nThe destination and the channel cannot be changed here, and `verified_at`\nis left alone - the number has not moved, so the proof still holds. To\npoint alerts at a different number, create that channel and verify it.",
+        "operationId": "update_channel_api_alerts__policy_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "title": "Policy Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Channel Api Alerts  Policy Id  Patch",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Channel",
         "tags": [
           "alerts"
         ]
@@ -18169,6 +20901,124 @@
           }
         },
         "summary": "Accept Invitation",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/accept-staff-invitation": {
+      "post": {
+        "description": "Takes up staff access and signs in, in one step.\n\nRate-limited by address: this endpoint creates accounts and grants\ncross-tenant access, so a caller working through guessed tokens should run\nout of attempts long before they run out of guesses. The token itself is 32\nrandom bytes, which is the actual defence; this is the cheap second one.",
+        "operationId": "accept_staff_invitation_api_auth_accept_staff_invitation_post",
+        "parameters": [
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptStaffInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Accept Staff Invitation",
         "tags": [
           "auth"
         ]
@@ -20165,7 +23015,7 @@
     },
     "/api/auth/refresh": {
       "post": {
-        "description": "Exchanges a refresh token for a new pair.\n\nRotates: the presented token is spent, and presenting it again revokes the\nwhole session family - unless it is the same browser a few seconds later,\nwhich is two tabs rather than a thief. See auth_service for both rules.\n\nThe session stays in the workspace its token family carries, so a switch\nmade an hour ago is still in force.",
+        "description": "Exchanges a refresh token for a new pair.\n\nRotates: the presented token is spent, and presenting it again revokes the\nwhole session family - unless it is the same browser a few seconds later,\nwhich is two tabs rather than a thief. See auth_service for both rules.\n\nThe session stays in the workspace its token family carries, so a switch\nmade an hour ago is still in force.\n\nWhile a staff support session is open in this browser (`ic_support`), the\ncustomer surfaces get a token for *that* workspace instead - see\n`_support_token_response`. The refresh cookie is not rotated then.",
         "operationId": "refresh_api_auth_refresh_post",
         "parameters": [
           {
@@ -20818,6 +23668,302 @@
         ]
       }
     },
+    "/api/auth/staff-invitation": {
+      "get": {
+        "description": "The terms of the offer, for the acceptance page.\n\nA GET with the token in the query string, because the recipient arrives by\nclicking a link in an email. That does put the token in browser history, so\nit is single-use, expires in seven days, and the page removes it from the\naddress bar once read.",
+        "operationId": "preview_staff_invitation_api_auth_staff_invitation_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffInvitationPreview"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Preview Staff Invitation",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/support/enter": {
+      "post": {
+        "description": "Starts working inside a customer's workspace, from the admin console.\n\nTakes the token `POST /internal/admin/impersonate` just returned and puts\nit in the HttpOnly `ic_support` cookie, so the customer surfaces - `app.`\nand `dashboard.` - pick it up on their next refresh. The caller must be the\noperator who opened the session, signed in as themselves.",
+        "operationId": "enter_support_session_api_auth_support_enter_post",
+        "parameters": [
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportEnterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportSessionInfo"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Enter Support Session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/support/exit": {
+      "post": {
+        "description": "Ends the support session this browser holds, and drops the cookie.\n\nNo principal required: the cookie is the credential, and ending a session\nis never dangerous. The next refresh returns the operator's own session.",
+        "operationId": "exit_support_session_api_auth_support_exit_post",
+        "parameters": [
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Exit Support Session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/auth/switch-organization": {
       "post": {
         "description": "Moves this session into another workspace.\n\nAny workspace the user is a member of, or one beneath it - an agency\nentering a client's workspace acts there with the role it holds above.\nReturns a token pair for the new workspace and rotates the refresh cookie\ninto it, so the switch survives every later refresh.\n\nNeeds both credentials: the access token says who is asking, the refresh\ncookie is what gets moved. A stolen access token alone cannot mint a\nlong-lived session this way.\n\n404 rather than 403 for a workspace the user cannot enter, so the endpoint\ndoes not confirm which workspace ids exist.",
@@ -21114,6 +24260,131 @@
         "summary": "Verify Email",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/billing/change-plan": {
+      "post": {
+        "description": "Moves an existing subscription to another plan, prorated, in place.\n\nAnswers with one of two things for the browser to do:\n\n  `payment_link`   the bank wants the customer to authorise the charge -\n                   send the browser there; the plan changes when the\n                   provider's webhook reports the payment\n  `pending`        the provider accepted it; the plan changes when its\n                   `subscription.plan_changed` webhook lands, usually in\n                   seconds, so the screen watches the subscription\n\nThe tier is NEVER changed here. A declined proration charge keeps the old\nplan (`on_payment_failure: prevent_change`), and only the webhook knows\nwhich way it went.",
+        "operationId": "change_plan_api_billing_change_plan_post",
+        "parameters": [
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Change Plan Api Billing Change Plan Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Change Plan",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -27425,6 +30696,896 @@
         ]
       }
     },
+    "/api/feature-requests": {
+      "get": {
+        "description": "This workspace's requests. `status=open` for the undecided ones.",
+        "operationId": "list_mine_api_feature_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 20,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Mine Api Feature Requests Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Mine",
+        "tags": [
+          "feature-requests"
+        ]
+      },
+      "post": {
+        "description": "Files a request.\n\nRate-limited per organisation, like tickets. The thing being protected is\na queue a person reads, and thirty requests from one workspace is the same\nproblem whoever typed them.",
+        "operationId": "create_api_feature_requests_post",
+        "parameters": [
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeatureRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Api Feature Requests Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "feature-requests"
+        ]
+      }
+    },
+    "/api/feature-requests/options": {
+      "get": {
+        "description": "The lists the form offers, with what each value means.\n\nServed rather than hard-coded in the client so the labels exist once. Two\ncopies of a status list is two places for one to be renamed, and the\nsymptom is a customer reading a raw `in_progress` on a screen.",
+        "operationId": "options_api_feature_requests_options_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Options Api Feature Requests Options Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Options",
+        "tags": [
+          "feature-requests"
+        ]
+      }
+    },
+    "/api/feature-requests/stats": {
+      "get": {
+        "operationId": "my_stats_api_feature_requests_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response My Stats Api Feature Requests Stats Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "My Stats",
+        "tags": [
+          "feature-requests"
+        ]
+      }
+    },
+    "/api/feature-requests/{request_id}": {
+      "get": {
+        "operationId": "get_one_api_feature_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get One Api Feature Requests  Request Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get One",
+        "tags": [
+          "feature-requests"
+        ]
+      },
+      "patch": {
+        "description": "Refines a request while it is still undecided.\n\nRefused once we have responded: editing the request underneath our answer\nwould leave our response reading as an answer to a question nobody asked.",
+        "operationId": "update_api_feature_requests__request_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeatureRequestUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update Api Feature Requests  Request Id  Patch",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update",
+        "tags": [
+          "feature-requests"
+        ]
+      }
+    },
+    "/api/feature-requests/{request_id}/vote": {
+      "post": {
+        "description": "Adds or removes your vote.\n\nVotes count within your workspace: they answer \"how many of our team want\nthis\", which is a number you can honestly report to us. They are not a\npublic cross-tenant poll - see the migration for why that would leak what\nevery customer is asking us to build.",
+        "operationId": "vote_api_feature_requests__request_id__vote_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Vote Api Feature Requests  Request Id  Vote Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Vote",
+        "tags": [
+          "feature-requests"
+        ]
+      }
+    },
+    "/api/feature-requests/{request_id}/withdraw": {
+      "post": {
+        "description": "Takes a request off our list without deleting it.\n\nNot a delete. A withdrawn request is still the answer to \"did we ever ask\nfor this\", and deleting the row loses the answer with it.",
+        "operationId": "withdraw_api_feature_requests__request_id__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw",
+        "tags": [
+          "feature-requests"
+        ]
+      }
+    },
     "/api/flows": {
       "get": {
         "operationId": "list_flows_api_flows_get",
@@ -31369,7 +35530,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Read Preferences",
+        "summary": "Read inbox preferences",
         "tags": [
           "notifications"
         ]
@@ -31492,7 +35653,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Write Preferences",
+        "summary": "Update inbox preferences",
         "tags": [
           "notifications"
         ]
@@ -36174,6 +40335,765 @@
           }
         ],
         "summary": "Create",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/assistant/chats": {
+      "get": {
+        "description": "This workspace's recent assistant conversations.",
+        "operationId": "assistant_chats_api_support_assistant_chats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Assistant Chats Api Support Assistant Chats Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Chats",
+        "tags": [
+          "support"
+        ]
+      },
+      "post": {
+        "description": "Opens a conversation. A new question is a new chat - see the service.",
+        "operationId": "assistant_start_api_support_assistant_chats_post",
+        "parameters": [
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Assistant Start Api Support Assistant Chats Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Start",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/assistant/chats/{chat_id}": {
+      "get": {
+        "operationId": "assistant_transcript_api_support_assistant_chats__chat_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "title": "Chat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Assistant Transcript Api Support Assistant Chats  Chat Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Transcript",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/assistant/chats/{chat_id}/ask": {
+      "post": {
+        "description": "Asks the assistant one question.\n\nRate-limited per organisation rather than per user, like ticket creation\nand for the same reason: what is being protected is a model budget, and\nsixty questions from one workspace cost the same whether one person or six\nasked them.",
+        "operationId": "assistant_ask_api_support_assistant_chats__chat_id__ask_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "title": "Chat Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantQuestion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Assistant Ask Api Support Assistant Chats  Chat Id  Ask Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Ask",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/assistant/chats/{chat_id}/escalate": {
+      "post": {
+        "description": "Raises a ticket carrying the whole conversation.\n\nThe same rate limit as raising a ticket by hand, against the same key:\nescalation is a ticket, and a separate budget would be a way around the\none that protects the operator queue.",
+        "operationId": "assistant_escalate_api_support_assistant_chats__chat_id__escalate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "title": "Chat Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantEscalation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Assistant Escalate Api Support Assistant Chats  Chat Id  Escalate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Escalate",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/assistant/chats/{chat_id}/escalation": {
+      "get": {
+        "description": "The ticket this chat would become, before raising it.\n\nA preview rather than a silent pre-fill: the customer sees the transcript\nthat is about to be attached, which is the difference between handing over\na conversation and having one quietly forwarded.",
+        "operationId": "assistant_escalation_preview_api_support_assistant_chats__chat_id__escalation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "title": "Chat Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Assistant Escalation Preview Api Support Assistant Chats  Chat Id  Escalation Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Escalation Preview",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/assistant/messages/{message_id}/rate": {
+      "post": {
+        "description": "Marks one answer helpful or not.",
+        "operationId": "assistant_rate_api_support_assistant_messages__message_id__rate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A unique key of your choosing, so this request can be retried safely. The first request with a given key executes; every replay returns that first response unchanged, with `Idempotent-Replay: true` set.\n\nGenerate one key per *action*, not per session - reusing a key with a different body is refused with 422 rather than silently replaying the wrong answer. Keys are remembered for 24 hours. A request that failed releases its key, so a retry after fixing the payload runs normally.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantRating"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error",
+            "headers": {
+              "RateLimit-Limit": {
+                "description": "Requests permitted in the current window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Requests left in the current window. Back off before it reaches 0.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the current window resets.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-API-Version": {
+                "description": "The dated version of the API contract that served this response, e.g. `2026-09-03`. Pin against it; it changes only when a response shape changes incompatibly.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "description": "Quote this in a support request to identify the call.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Assistant Rate",
         "tags": [
           "support"
         ]

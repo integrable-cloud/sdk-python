@@ -11,6 +11,7 @@ idempotency rule and the error mapping, so the two cannot drift.
 """
 
 from ._client import DEFAULT_BASE_URL, ApiResponse, RateLimit
+from ._version import __version__
 from .client import AsyncIntegrable, Integrable
 from .errors import (
     AuthenticationError,
@@ -26,8 +27,6 @@ from .errors import (
     TimeoutError_,
     ValidationError,
 )
-
-__version__ = "0.1.0"
 
 __all__ = [
     "Integrable",
